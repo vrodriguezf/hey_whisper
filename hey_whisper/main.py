@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import numpy as np
 import sounddevice as sd
@@ -8,10 +9,31 @@ import threading
 import time
 from openai import OpenAI
 
+
+def _parse_args():
+    parser = argparse.ArgumentParser(
+        description="Record audio from the microphone and transcribe it with Whisper."
+    )
+    parser.add_argument(
+        "--api-key",
+        help="OpenAI API key to use for the transcription request. "
+             "Defaults to the value of the OPENAI_API_KEY environment variable.",
+    )
+    return parser.parse_args()
+
 def run_transcription():
+    args = _parse_args()
+
+    api_key = args.api_key or os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        print(
+            "No OpenAI API key provided. Set the OPENAI_API_KEY environment variable "
+            "or pass --api-key on the command line."
+        )
+        return
+
     # Initialize the OpenAI client
-    client = OpenAI()
-    client.api_key = os.environ.get("OPENAI_API_KEY", "YOUR_OPENAI_API_KEY_HERE")
+    client = OpenAI(api_key=api_key)
     
     # Recording parameters
     FS = 16000  # Sampling rate (16kHz recommended for Whisper)
